@@ -82,7 +82,7 @@ export default function HomeScreen() {
 
     Alert.alert(
       'Gallery Scan',
-      'Gallery QR scanning needs native ML.\nCamera scanning works perfectly.'
+      'Coming Soon'
     );
   };
 
@@ -163,7 +163,7 @@ export default function HomeScreen() {
         { label: 'Favorites', route: '/favorites' },
         { label: 'History', route: '/history' },
         { label: 'My QR', route: '/my-qr' },          // create later
-        { label: 'Create QR', route: '/create-qr' }, // create later
+        { label: 'Create QR', route: '/(tabs)/explore' }, // create later
         { label: 'Settings', route: '/settings' },   // create later
         { label: 'Share our app', route: 'share' },  // special action
       ].map((item) => (
