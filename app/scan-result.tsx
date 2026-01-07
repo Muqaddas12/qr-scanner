@@ -65,33 +65,53 @@ export default function ScanResult() {
   /* ---------------- TOGGLE FAVORITE ---------------- */
 
   const toggleFavorite = async () => {
-    const stored = await AsyncStorage.getItem('SCAN_HISTORY');
-    let history = stored ? JSON.parse(stored) : [];
+  const [scanStored, createdStored] = await Promise.all([
+    AsyncStorage.getItem('SCAN_HISTORY'),
+    AsyncStorage.getItem('CREATED_QR'),
+  ]);
 
-    const index = history.findIndex((i: any) => i.data === data);
+  const scanHistory = scanStored ? JSON.parse(scanStored) : [];
+  const createdHistory = createdStored ? JSON.parse(createdStored) : [];
 
-    if (index !== -1) {
-      history[index].favorite = !history[index].favorite;
-      setFavorite(history[index].favorite);
-      showToast(
-        history[index].favorite
-          ? 'Added to Favorites'
-          : 'Removed from Favorites'
-      );
-    } else {
-      history.unshift({
-        id: Date.now().toString(),
-        type,
-        data,
-        time: new Date().toISOString(),
-        favorite: true,
-      });
-      setFavorite(true);
-      showToast('Added to Favorites');
-    }
+  // 🔍 check in BOTH places
+  const alreadyFavInScan = scanHistory.find(
+    (i: any) => i.data === data && i.favorite
+  );
 
-    await AsyncStorage.setItem('SCAN_HISTORY', JSON.stringify(history));
-  };
+  const alreadyFavInCreated = createdHistory.find(
+    (i: any) => i.data === data && i.favorite
+  );
+
+  if (alreadyFavInScan || alreadyFavInCreated) {
+    showToast('Already in Favorites');
+    setFavorite(true);
+    return;
+  }
+
+  // ⬇️ existing logic (SCAN_HISTORY as source of truth for scan)
+  const index = scanHistory.findIndex((i: any) => i.data === data);
+
+  if (index !== -1) {
+    scanHistory[index].favorite = true;
+  } else {
+    scanHistory.unshift({
+      id: Date.now().toString(),
+      type,
+      data,
+      time: new Date().toISOString(),
+      favorite: true,
+    });
+  }
+
+  await AsyncStorage.setItem(
+    'SCAN_HISTORY',
+    JSON.stringify(scanHistory)
+  );
+
+  setFavorite(true);
+  showToast('Added to Favorites');
+};
+
 
   /* ---------------- ACTIONS ---------------- */
 

@@ -52,13 +52,32 @@ export default function FavoritesScreen() {
     loadFavorites();
   }, []);
 
-  const loadFavorites = async () => {
-    const stored = await AsyncStorage.getItem('SCAN_HISTORY');
-    const history = stored ? JSON.parse(stored) : [];
-    const favs = history.filter((i: FavoriteItem) => i.favorite);
-    setFavorites(favs);
-    setSelected([]);
-  };
+ const loadFavorites = async () => {
+  const [scanStored, createdStored] = await Promise.all([
+    AsyncStorage.getItem('SCAN_HISTORY'),
+    AsyncStorage.getItem('CREATED_QR'),
+  ]);
+
+  const scanHistory: FavoriteItem[] = scanStored
+    ? JSON.parse(scanStored)
+    : [];
+
+  const createdHistory: FavoriteItem[] = createdStored
+    ? JSON.parse(createdStored)
+    : [];
+
+  // normalize + filter favorites
+  const favorites = [...scanHistory, ...createdHistory]
+    .map((i) => ({
+      ...i,
+      favorite: i.favorite ?? false,
+    }))
+    .filter((i) => i.favorite);
+
+  setFavorites(favorites);
+  setSelected([]);
+};
+
 
   /* ---------------- SORT + SEARCH ---------------- */
 

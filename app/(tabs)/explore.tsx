@@ -7,138 +7,159 @@ import {
   Platform,
   ToastAndroid,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import QRCode from 'react-native-qrcode-svg';
 
-export default function CreateQRScreen() {
+export default function CreateCodeScreen() {
   const router = useRouter();
+
   const [value, setValue] = useState('');
   const [generated, setGenerated] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const showToast = (msg: string) => {
-    if (Platform.OS === 'android') {
-      ToastAndroid.show(msg, ToastAndroid.SHORT);
-    } else {
-      alert(msg);
-    }
+    Platform.OS === 'android'
+      ? ToastAndroid.show(msg, ToastAndroid.SHORT)
+      : alert(msg);
   };
 
-  const saveQR = async () => {
+  const generate = () => {
+    if (!value.trim()) return;
+
+    setGenerated(false);
+    setLoading(true);
+
+    setTimeout(() => {
+      setGenerated(true);
+      setLoading(false);
+    }, 400);
+  };
+
+  const saveCode = async () => {
     if (!value.trim()) return;
 
     const stored = await AsyncStorage.getItem('CREATED_QR');
     const existing = stored ? JSON.parse(stored) : [];
 
-    const newQR = {
+    const newItem = {
       id: Date.now().toString(),
       data: value,
-      type: 'Created QR',
+      type: 'qr',
       time: new Date().toISOString(),
     };
 
-    const updated = [newQR, ...existing];
-    await AsyncStorage.setItem('CREATED_QR', JSON.stringify(updated));
+    await AsyncStorage.setItem(
+      'SCAN_HISTORY',
+      JSON.stringify([newItem, ...existing])
+    );
 
     showToast('QR saved successfully');
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
-      <View style={{ flex: 1 }}>
-        {/* HEADER */}
-        <View
+      {/* HEADER */}
+      <View
+        style={{
+          height: 60,
+          paddingHorizontal: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: '#111',
+        }}
+      >
+        <Pressable onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={26} color="#fff" />
+        </Pressable>
+
+        <Text
           style={{
-            height: 60,
-            paddingHorizontal: 16,
-            flexDirection: 'row',
-            alignItems: 'center',
-            backgroundColor: '#111',
+            color: '#fff',
+            fontSize: 18,
+            fontWeight: '600',
+            marginLeft: 16,
           }}
         >
-          <Pressable onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={26} color="#fff" />
-          </Pressable>
+          Create QR
+        </Text>
+      </View>
 
-          <Text
-            style={{
-              color: '#fff',
-              fontSize: 18,
-              fontWeight: '600',
-              marginLeft: 16,
-            }}
-          >
-            Create QR
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        {/* INPUT */}
+        <TextInput
+          placeholder="Enter text / URL / UPI"
+          placeholderTextColor="#6B7280"
+          value={value}
+          onChangeText={setValue}
+          multiline
+          style={{
+            backgroundColor: '#161616',
+            color: '#fff',
+            padding: 14,
+            borderRadius: 12,
+            minHeight: 80,
+          }}
+        />
+
+        {/* GENERATE */}
+        <Pressable
+          onPress={generate}
+          style={{
+            marginTop: 16,
+            padding: 14,
+            borderRadius: 10,
+            backgroundColor: '#2563EB',
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ color: '#fff', fontSize: 16 }}>
+            Generate QR
           </Text>
-        </View>
+        </Pressable>
 
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
-          {/* INPUT */}
-          <TextInput
-            placeholder="Enter text / URL / UPI"
-            placeholderTextColor="#6B7280"
-            value={value}
-            onChangeText={setValue}
-            multiline
-            style={{
-              backgroundColor: '#161616',
-              color: '#fff',
-              padding: 14,
-              borderRadius: 12,
-              minHeight: 80,
-            }}
+        {/* LOADING */}
+        {loading && (
+          <ActivityIndicator
+            size="large"
+            color="#2563EB"
+            style={{ marginTop: 24 }}
           />
+        )}
 
-          {/* GENERATE */}
-          <Pressable
-            onPress={() => setGenerated(true)}
+        {/* RESULT */}
+        {generated && !loading && (
+          <View
             style={{
-              marginTop: 16,
-              padding: 14,
-              borderRadius: 10,
-              backgroundColor: '#2563EB',
+              marginTop: 30,
               alignItems: 'center',
+              backgroundColor: '#fff',
+              padding: 20,
+              borderRadius: 16,
             }}
           >
-            <Text style={{ color: '#fff', fontSize: 16 }}>
-              Generate QR
-            </Text>
-          </Pressable>
+            <QRCode value={value} size={200} />
 
-          {/* QR RESULT */}
-          {generated && value.trim() !== '' && (
-            <View
+            <Pressable
+              onPress={saveCode}
               style={{
-                marginTop: 30,
-                alignItems: 'center',
-                backgroundColor: '#fff',
-                padding: 20,
-                borderRadius: 16,
+                marginTop: 20,
+                paddingVertical: 12,
+                paddingHorizontal: 24,
+                borderRadius: 10,
+                backgroundColor: '#16A34A',
               }}
             >
-              <QRCode value={value} size={200} />
-
-              <Pressable
-                onPress={saveQR}
-                style={{
-                  marginTop: 20,
-                  paddingVertical: 12,
-                  paddingHorizontal: 24,
-                  borderRadius: 10,
-                  backgroundColor: '#16A34A',
-                }}
-              >
-                <Text style={{ color: '#fff', fontSize: 15 }}>
-                  Save QR
-                </Text>
-              </Pressable>
-            </View>
-          )}
-        </ScrollView>
-      </View>
+              <Text style={{ color: '#fff' }}>Save</Text>
+            </Pressable>
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }

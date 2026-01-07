@@ -162,7 +162,7 @@ export default function HomeScreen() {
         { label: 'Scan Images', route: null },        // handle separately
         { label: 'Favorites', route: '/favorites' },
         { label: 'History', route: '/history' },
-        { label: 'My QR', route: '/my-qr' },          // create later
+        { label: 'My QR', route: '/MyQRScreen' },          // create later
         { label: 'Create QR', route: '/(tabs)/explore' }, // create later
         { label: 'Settings', route: '/settings' },   // create later
         { label: 'Share our app', route: 'share' },  // special action
