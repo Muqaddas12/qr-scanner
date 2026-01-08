@@ -55,7 +55,7 @@ export default function CreateCodeScreen() {
     };
 
     await AsyncStorage.setItem(
-      'SCAN_HISTORY',
+      'CREATED_QR',
       JSON.stringify([newItem, ...existing])
     );
 

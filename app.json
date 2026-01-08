@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.muqaddas123.qrscanner"
+      "package": "com.mtbyown.qrscanner"
     },
     "web": {
       "output": "static",
