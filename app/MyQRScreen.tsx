@@ -137,7 +137,24 @@ export default function MyQRScreen() {
         gap: 12,
       }}
     >
-      <QRCode value={item.data} size={70} getRef={c => (qrRef.current = c)} />
+   <Pressable
+  onPress={() => {
+    router.push({
+      pathname: '/scan-result',
+      params: {
+        result: item.data,   // ✅ send only QR text
+        type: item.type,     // ✅ optional but recommended
+      },
+    });
+  }}
+>
+  <QRCode
+    value={item.data}
+    size={70}
+    getRef={(c) => (qrRef.current = c)}
+  />
+</Pressable>
+
 
       <View style={{ flex: 1 }}>
         <View
