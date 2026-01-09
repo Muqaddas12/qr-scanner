@@ -10,10 +10,13 @@ import {
   ToastAndroid,
   TextInput,
 } from 'react-native';
+import { Menu } from 'lucide-react-native';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Header from '@/components/header';
 
 type FavoriteItem = {
   id: string;
@@ -27,7 +30,7 @@ type SortType = 'date-desc' | 'date-asc' | 'type';
 
 export default function FavoritesScreen() {
   const router = useRouter();
-
+const [menuOpen,setMenuOpen]=useState(false)
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -142,48 +145,41 @@ export default function FavoritesScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
-      <View style={{ flex: 1 }}>
-        {/* HEADER */}
-        <View
-          style={{
-            height: 60,
-            paddingHorizontal: 16,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            backgroundColor: '#111',
-          }}
-        >
-          <Pressable
-            onPress={() =>
-              selected.length ? clearSelection() : router.back()
-            }
-          >
-            <Ionicons
-              name={selected.length ? 'close' : 'arrow-back'}
-              size={26}
-              color="#fff"
-            />
-          </Pressable>
+       <View
+    style={{
+      height: 60,
+      paddingHorizontal: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: '#111',
+    }}
+  >
+    <Pressable onPress={() => setMenuOpen(true)}>
+      <Menu size={26} color="#fff" />
+    </Pressable>
 
-          <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>
-            {selected.length
-              ? `${selected.length} selected`
-              : 'Favorites'}
-          </Text>
+    <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>
+      {selected.length ? `${selected.length} selected` : 'Favorites'}
+    </Text>
 
-          <View style={{ flexDirection: 'row', gap: 14 }}>
-            <Pressable onPress={exportFavorites}>
-              <Ionicons name="share-outline" size={22} color="#fff" />
-            </Pressable>
+    <View style={{ flexDirection: 'row', gap: 14 }}>
+      <Pressable onPress={exportFavorites}>
+        <Ionicons name="share-outline" size={22} color="#fff" />
+      </Pressable>
 
-            {selected.length > 0 && (
-              <Pressable onPress={() => removeFavorites(selected)}>
-                <Ionicons name="trash-outline" size={22} color="#EF4444" />
-              </Pressable>
-            )}
-          </View>
-        </View>
+      {selected.length > 0 && (
+        <Pressable onPress={() => removeFavorites(selected)}>
+          <Ionicons name="trash-outline" size={22} color="#EF4444" />
+        </Pressable>
+      )}
+    </View>
+  </View>
+
+  {/* DRAWER / MENU */}
+  {menuOpen && <Header setMenuOpen={setMenuOpen} />}
+      <View>
+       
 
         {/* SEARCH */}
         <View style={{ padding: 16 }}>

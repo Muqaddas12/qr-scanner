@@ -16,7 +16,8 @@ import QRCode from 'react-native-qrcode-svg';
 import { useRouter } from 'expo-router';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
-
+import Header from '@/components/header';
+import { Menu } from 'lucide-react-native';
 type QRItem = {
   id: string;
   data: string;
@@ -28,7 +29,7 @@ type QRItem = {
 export default function MyQRScreen() {
   const router = useRouter();
   const qrRef = useRef<any>(null);
-
+const [menuOpen,setMenuOpen]=useState(false)
   const [list, setList] = useState<QRItem[]>([]);
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -191,78 +192,85 @@ export default function MyQRScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
-      {/* HEADER */}
-      <View
+ <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
+
+  {/* HEADER BAR */}
+  <View
+    style={{
+      height: 60,
+      paddingHorizontal: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#111',
+    }}
+  >
+    <Pressable onPress={() => setMenuOpen(true)}>
+      <Menu size={26} color="#fff" />
+    </Pressable>
+
+    <Text
+      style={{
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '600',
+        marginLeft: 16,
+        flex: 1,
+      }}
+    >
+      My QR Codes
+    </Text>
+
+    <Pressable onPress={() => setSortNewest(!sortNewest)}>
+      <Ionicons
+        name={sortNewest ? 'time-outline' : 'swap-vertical-outline'}
+        size={22}
+        color="#fff"
+      />
+    </Pressable>
+  </View>
+
+  {/* SIDEBAR / DRAWER */}
+  {menuOpen && <Header setMenuOpen={setMenuOpen} />}
+
+  {/* SEARCH */}
+  <View style={{ padding: 16 }}>
+    <TextInput
+      placeholder="Search QR..."
+      placeholderTextColor="#9CA3AF"
+      value={search}
+      onChangeText={setSearch}
+      style={{
+        backgroundColor: '#161616',
+        color: '#fff',
+        padding: 12,
+        borderRadius: 10,
+      }}
+    />
+  </View>
+
+  {/* LIST */}
+  <FlatList
+    data={filtered}
+    keyExtractor={(i) => i.id}
+    renderItem={renderItem}
+    contentContainerStyle={{ padding: 16 }}
+    refreshControl={
+      <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+    }
+    ListEmptyComponent={
+      <Text
         style={{
-          height: 60,
-          paddingHorizontal: 16,
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: '#111',
+          color: '#9CA3AF',
+          textAlign: 'center',
+          marginTop: 40,
         }}
       >
-        <Pressable onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={26} color="#fff" />
-        </Pressable>
+        No saved QR codes
+      </Text>
+    }
+  />
 
-        <Text
-          style={{
-            color: '#fff',
-            fontSize: 18,
-            fontWeight: '600',
-            marginLeft: 16,
-            flex: 1,
-          }}
-        >
-          My QR Codes
-        </Text>
+</SafeAreaView>
 
-        <Pressable onPress={() => setSortNewest(!sortNewest)}>
-          <Ionicons
-            name={sortNewest ? 'time-outline' : 'swap-vertical-outline'}
-            size={22}
-            color="#fff"
-          />
-        </Pressable>
-      </View>
-
-      {/* SEARCH */}
-      <View style={{ padding: 16 }}>
-        <TextInput
-          placeholder="Search QR..."
-          placeholderTextColor="#9CA3AF"
-          value={search}
-          onChangeText={setSearch}
-          style={{
-            backgroundColor: '#161616',
-            color: '#fff',
-            padding: 12,
-            borderRadius: 10,
-          }}
-        />
-      </View>
-
-      <FlatList
-        data={filtered}
-        keyExtractor={i => i.id}
-        renderItem={renderItem}
-        contentContainerStyle={{ padding: 16 }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <Text
-            style={{
-              color: '#9CA3AF',
-              textAlign: 'center',
-              marginTop: 40,
-            }}
-          >
-            No saved QR codes
-          </Text>
-        }
-      />
-    </SafeAreaView>
   );
 }

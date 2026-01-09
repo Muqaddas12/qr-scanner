@@ -11,6 +11,8 @@ import {
   Platform,
   ToastAndroid,
 } from 'react-native';
+import { Menu } from 'lucide-react-native';
+import Header from '@/components/header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,7 +34,7 @@ type Section = {
 
 export default function HistoryScreen() {
   const router = useRouter();
-
+const [menuOpen,setMenuOpen]=useState(false)
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -276,97 +278,93 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
-      {/* HEADER */}
-      <View
-        style={{
-          height: 60,
-          paddingHorizontal: 16,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          backgroundColor: '#111',
-        }}
-      >
-        <Pressable
-          onPress={() =>
-            selected.length ? clearSelection() : router.back()
-          }
-        >
-          <Ionicons
-            name={selected.length ? 'close' : 'arrow-back'}
-            size={26}
-            color="#fff"
-          />
-        </Pressable>
 
-        <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>
-          {selected.length
-            ? `${selected.length} selected`
-            : 'History'}
+  {/* HEADER BAR */}
+  <View
+    style={{
+      height: 60,
+      paddingHorizontal: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: '#111',
+    }}
+  >
+    <Pressable onPress={() => setMenuOpen(true)}>
+      <Menu size={26} color="#fff" />
+    </Pressable>
+
+    <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>
+      {selected.length ? `${selected.length} selected` : 'History'}
+    </Text>
+
+    <View style={{ flexDirection: 'row', gap: 14 }}>
+      <Pressable onPress={exportHistory}>
+        <Ionicons name="share-outline" size={22} color="#fff" />
+      </Pressable>
+
+      {!selected.length && (
+        <Pressable onPress={clearHistory}>
+          <Ionicons name="trash-outline" size={22} color="#fff" />
+        </Pressable>
+      )}
+    </View>
+  </View>
+
+  {/* SIDEBAR / DRAWER */}
+  {menuOpen && <Header setMenuOpen={setMenuOpen} />}
+
+  {/* SEARCH */}
+  <View style={{ padding: 16 }}>
+    <TextInput
+      placeholder="Search history..."
+      placeholderTextColor="#6B7280"
+      value={search}
+      onChangeText={setSearch}
+      style={{
+        backgroundColor: '#161616',
+        color: '#fff',
+        padding: 12,
+        borderRadius: 10,
+      }}
+    />
+  </View>
+
+  {/* LIST */}
+  <FlatList
+    data={groupedData}
+    keyExtractor={(item) => item.title}
+    refreshControl={
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={async () => {
+          setRefreshing(true);
+          await loadHistory();
+          setRefreshing(false);
+        }}
+        tintColor="#22C55E"
+      />
+    }
+    renderItem={({ item }) => (
+      <View>
+        <Text
+          style={{
+            color: '#9CA3AF',
+            marginLeft: 16,
+            marginBottom: 8,
+          }}
+        >
+          {item.title}
         </Text>
 
-        <View style={{ flexDirection: 'row', gap: 14 }}>
-          <Pressable onPress={exportHistory}>
-            <Ionicons name="share-outline" size={22} color="#fff" />
-          </Pressable>
-
-          {!selected.length && (
-            <Pressable onPress={clearHistory}>
-              <Ionicons name="trash-outline" size={22} color="#fff" />
-            </Pressable>
-          )}
-        </View>
+        {item.data.map((row) => (
+          <View key={row.id}>{renderItem({ item: row })}</View>
+        ))}
       </View>
+    )}
+  />
 
-      {/* SEARCH */}
-      <View style={{ padding: 16 }}>
-        <TextInput
-          placeholder="Search history..."
-          placeholderTextColor="#6B7280"
-          value={search}
-          onChangeText={setSearch}
-          style={{
-            backgroundColor: '#161616',
-            color: '#fff',
-            padding: 12,
-            borderRadius: 10,
-          }}
-        />
-      </View>
+</SafeAreaView>
 
-      {/* LIST */}
-      <FlatList
-        data={groupedData}
-        keyExtractor={(item) => item.title}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={async () => {
-              setRefreshing(true);
-              await loadHistory();
-              setRefreshing(false);
-            }}
-            tintColor="#22C55E"
-          />
-        }
-        renderItem={({ item }) => (
-          <View>
-            <Text
-              style={{
-                color: '#9CA3AF',
-                marginLeft: 16,
-                marginBottom: 8,
-              }}
-            >
-              {item.title}
-            </Text>
-
-            {item.data.map((row) => (
-              <View key={row.id}>{renderItem({ item: row })}</View>
-            ))}
-          </View>
-        )}
-      />
-    </SafeAreaView>
   );
 }
