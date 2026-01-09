@@ -108,28 +108,41 @@ const [menuOpen,setMenuOpen]=useState(false)
         : new Date(a.time).getTime() - new Date(b.time).getTime()
     );
 
-  const renderItem = ({ item }: { item: QRItem }) => (
-    <View
-      style={{
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 16,
-      }}
-    >
+const renderItem = ({ item }: { item: QRItem }) => (
+  <View
+    style={{
+      flexDirection: "row",
+      backgroundColor: "#fff",
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 12,
+      alignItems: "center",
+      gap: 12,
+    }}
+  >
+    {/* QR PREVIEW */}
+    <QRCode
+      value={item.data}
+      size={70}
+      getRef={(c) => (qrRef.current = c)}
+    />
+
+    {/* RIGHT CONTENT */}
+    <View style={{ flex: 1 }}>
       {/* TOP ROW */}
       <View
         style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          marginBottom: 6,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 4,
         }}
       >
         <View
           style={{
-            backgroundColor: '#E5E7EB',
+            backgroundColor: "#E5E7EB",
             paddingHorizontal: 8,
-            paddingVertical: 3,
+            paddingVertical: 2,
             borderRadius: 6,
           }}
         >
@@ -138,24 +151,17 @@ const [menuOpen,setMenuOpen]=useState(false)
 
         <Pressable onPress={() => toggleFavorite(item.id)}>
           <Ionicons
-            name={item.favorite ? 'heart' : 'heart-outline'}
-            size={20}
+            name={item.favorite ? "heart" : "heart-outline"}
+            size={18}
             color="#EF4444"
           />
         </Pressable>
       </View>
 
-      <View style={{ alignItems: 'center' }}>
-        <QRCode
-          value={item.data}
-          size={140}
-          getRef={c => (qrRef.current = c)}
-        />
-      </View>
-
+      {/* DATA */}
       <Text
         numberOfLines={2}
-        style={{ marginTop: 8, fontSize: 13 }}
+        style={{ fontSize: 13, color: "#111" }}
       >
         {item.data}
       </Text>
@@ -163,33 +169,35 @@ const [menuOpen,setMenuOpen]=useState(false)
       {/* ACTIONS */}
       <View
         style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          marginTop: 12,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginTop: 8,
+          paddingRight: 10,
         }}
       >
         <Pressable onPress={() => editQR(item)}>
-          <Ionicons name="create-outline" size={22} color="#2563EB" />
+          <Ionicons name="create-outline" size={20} color="#2563EB" />
         </Pressable>
 
         <Pressable onPress={() => shareQR(item.data)}>
           <Ionicons
             name="share-social-outline"
-            size={22}
+            size={20}
             color="#16A34A"
           />
         </Pressable>
 
         <Pressable onPress={() => downloadQR(item.id)}>
-          <Ionicons name="download-outline" size={22} color="#7C3AED" />
+          <Ionicons name="download-outline" size={20} color="#7C3AED" />
         </Pressable>
 
         <Pressable onPress={() => deleteQR(item.id)}>
-          <Ionicons name="trash-outline" size={22} color="#DC2626" />
+          <Ionicons name="trash-outline" size={20} color="#DC2626" />
         </Pressable>
       </View>
     </View>
-  );
+  </View>
+);
 
   return (
  <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
