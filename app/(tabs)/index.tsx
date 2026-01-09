@@ -236,7 +236,9 @@ export default function HomeScreen() {
 </Pressable>
 
 </View>
-<Pressable>
+<Pressable onPress={()=>{
+  router.push('/history')
+}}>
   <Clock size={26} color="#fff" />
 </Pressable>
 
