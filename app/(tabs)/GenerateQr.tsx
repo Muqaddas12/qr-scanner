@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,10 +19,26 @@ import QRCode from 'react-native-qrcode-svg';
 
 export default function GenerateQr() {
   const router = useRouter();
-const [menuOpen,setMenuOpen]=useState(false)
+  const [menuOpen, setMenuOpen] = useState(false);
   const [value, setValue] = useState('');
   const [generated, setGenerated] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isDark, setIsDark] = useState(true);
+
+  /* ---------------- THEME ---------------- */
+
+  useEffect(() => {
+    (async () => {
+      const saved = await AsyncStorage.getItem('APP_THEME');
+      if (saved === 'light') setIsDark(false);
+    })();
+  }, []);
+
+  const bg = isDark ? '#0B0B0B' : '#F9FAFB';
+  const headerBg = isDark ? '#111' : '#FFFFFF';
+  const card = isDark ? '#161616' : '#FFFFFF';
+  const text = isDark ? '#E5E7EB' : '#111827';
+  const subText = isDark ? '#6B7280' : '#9CA3AF';
 
   const showToast = (msg: string) => {
     Platform.OS === 'android'
@@ -64,109 +80,106 @@ const [menuOpen,setMenuOpen]=useState(false)
   };
 
   return (
-  <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
-
-  {/* HEADER BAR */}
-  <View
-    style={{
-      height: 60,
-      paddingHorizontal: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#111',
-    }}
-  >
-    <Pressable onPress={() => setMenuOpen(true)}>
-      <Menu size={26} color="#fff" />
-    </Pressable>
-
-    <Text
-      style={{
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: '600',
-        marginLeft: 16,
-      }}
-    >
-      Create QR
-    </Text>
-  </View>
-
-  {/* SIDEBAR / DRAWER */}
-  {menuOpen && <Header setMenuOpen={setMenuOpen} />}
-
-  <ScrollView contentContainerStyle={{ padding: 16 }}>
-    {/* INPUT */}
-    <TextInput
-      placeholder="Enter text / URL / UPI"
-      placeholderTextColor="#6B7280"
-      value={value}
-      onChangeText={setValue}
-      multiline
-      style={{
-        backgroundColor: '#161616',
-        color: '#fff',
-        padding: 14,
-        borderRadius: 12,
-        minHeight: 80,
-      }}
-    />
-
-    {/* GENERATE */}
-    <Pressable
-      onPress={generate}
-      style={{
-        marginTop: 16,
-        padding: 14,
-        borderRadius: 10,
-        backgroundColor: '#2563EB',
-        alignItems: 'center',
-      }}
-    >
-      <Text style={{ color: '#fff', fontSize: 16 }}>
-        Generate QR
-      </Text>
-    </Pressable>
-
-    {/* LOADING */}
-    {loading && (
-      <ActivityIndicator
-        size="large"
-        color="#2563EB"
-        style={{ marginTop: 24 }}
-      />
-    )}
-
-    {/* RESULT */}
-    {generated && !loading && (
+    <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
+      {/* HEADER BAR */}
       <View
         style={{
-          marginTop: 30,
+          height: 60,
+          paddingHorizontal: 16,
+          flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: '#fff',
-          padding: 20,
-          borderRadius: 16,
+          backgroundColor: headerBg,
         }}
       >
-        <QRCode value={value} size={200} />
+        <Pressable onPress={() => setMenuOpen(true)}>
+          <Menu size={26} color={text} />
+        </Pressable>
 
-        <Pressable
-          onPress={saveCode}
+        <Text
           style={{
-            marginTop: 20,
-            paddingVertical: 12,
-            paddingHorizontal: 24,
-            borderRadius: 10,
-            backgroundColor: '#16A34A',
+            color: text,
+            fontSize: 18,
+            fontWeight: '600',
+            marginLeft: 16,
           }}
         >
-          <Text style={{ color: '#fff' }}>Save</Text>
-        </Pressable>
+          Create QR
+        </Text>
       </View>
-    )}
-  </ScrollView>
 
-</SafeAreaView>
+      {/* SIDEBAR / DRAWER */}
+      {menuOpen && <Header setMenuOpen={setMenuOpen} />}
 
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        {/* INPUT */}
+        <TextInput
+          placeholder="Enter text / URL / UPI"
+          placeholderTextColor={subText}
+          value={value}
+          onChangeText={setValue}
+          multiline
+          style={{
+            backgroundColor: card,
+            color: text,
+            padding: 14,
+            borderRadius: 12,
+            minHeight: 80,
+          }}
+        />
+
+        {/* GENERATE */}
+        <Pressable
+          onPress={generate}
+          style={{
+            marginTop: 16,
+            padding: 14,
+            borderRadius: 10,
+            backgroundColor: '#2563EB',
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ color: '#fff', fontSize: 16 }}>
+            Generate QR
+          </Text>
+        </Pressable>
+
+        {/* LOADING */}
+        {loading && (
+          <ActivityIndicator
+            size="large"
+            color="#2563EB"
+            style={{ marginTop: 24 }}
+          />
+        )}
+
+        {/* RESULT */}
+        {generated && !loading && (
+          <View
+            style={{
+              marginTop: 30,
+              alignItems: 'center',
+              backgroundColor: '#fff',
+              padding: 20,
+              borderRadius: 16,
+            }}
+          >
+            <QRCode value={value} size={200} />
+
+            <Pressable
+              onPress={saveCode}
+              style={{
+                marginTop: 20,
+                paddingVertical: 12,
+                paddingHorizontal: 24,
+                borderRadius: 10,
+                backgroundColor: '#16A34A',
+              }}
+            >
+              <Text style={{ color: '#fff' }}>Save</Text>
+            </Pressable>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }

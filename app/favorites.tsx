@@ -30,7 +30,8 @@ type SortType = 'date-desc' | 'date-asc' | 'type';
 
 export default function FavoritesScreen() {
   const router = useRouter();
-const [menuOpen,setMenuOpen]=useState(false)
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -38,6 +39,23 @@ const [menuOpen,setMenuOpen]=useState(false)
   const [sort, setSort] = useState<SortType>('date-desc');
 
   const [selected, setSelected] = useState<string[]>([]);
+
+  const [isDark, setIsDark] = useState(true);
+
+  /* ---------------- THEME ---------------- */
+
+  useEffect(() => {
+    (async () => {
+      const saved = await AsyncStorage.getItem('APP_THEME');
+      if (saved === 'light') setIsDark(false);
+    })();
+  }, []);
+
+  const bg = isDark ? '#0B0B0B' : '#F9FAFB';
+  const headerBg = isDark ? '#111' : '#FFFFFF';
+  const card = isDark ? '#161616' : '#FFFFFF';
+  const text = isDark ? '#E5E7EB' : '#111827';
+  const muted = '#6B7280';
 
   /* ---------------- TOAST ---------------- */
 
@@ -55,32 +73,30 @@ const [menuOpen,setMenuOpen]=useState(false)
     loadFavorites();
   }, []);
 
- const loadFavorites = async () => {
-  const [scanStored, createdStored] = await Promise.all([
-    AsyncStorage.getItem('SCAN_HISTORY'),
-    AsyncStorage.getItem('CREATED_QR'),
-  ]);
+  const loadFavorites = async () => {
+    const [scanStored, createdStored] = await Promise.all([
+      AsyncStorage.getItem('SCAN_HISTORY'),
+      AsyncStorage.getItem('CREATED_QR'),
+    ]);
 
-  const scanHistory: FavoriteItem[] = scanStored
-    ? JSON.parse(scanStored)
-    : [];
+    const scanHistory: FavoriteItem[] = scanStored
+      ? JSON.parse(scanStored)
+      : [];
 
-  const createdHistory: FavoriteItem[] = createdStored
-    ? JSON.parse(createdStored)
-    : [];
+    const createdHistory: FavoriteItem[] = createdStored
+      ? JSON.parse(createdStored)
+      : [];
 
-  // normalize + filter favorites
-  const favorites = [...scanHistory, ...createdHistory]
-    .map((i) => ({
-      ...i,
-      favorite: i.favorite ?? false,
-    }))
-    .filter((i) => i.favorite);
+    const favorites = [...scanHistory, ...createdHistory]
+      .map((i) => ({
+        ...i,
+        favorite: i.favorite ?? false,
+      }))
+      .filter((i) => i.favorite);
 
-  setFavorites(favorites);
-  setSelected([]);
-};
-
+    setFavorites(favorites);
+    setSelected([]);
+  };
 
   /* ---------------- SORT + SEARCH ---------------- */
 
@@ -104,8 +120,6 @@ const [menuOpen,setMenuOpen]=useState(false)
         : [...prev, id]
     );
   };
-
-  const clearSelection = () => setSelected([]);
 
   /* ---------------- ACTIONS ---------------- */
 
@@ -144,182 +158,178 @@ const [menuOpen,setMenuOpen]=useState(false)
   /* ---------------- UI ---------------- */
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
-       <View
-    style={{
-      height: 60,
-      paddingHorizontal: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: '#111',
-    }}
-  >
-    <Pressable onPress={() => setMenuOpen(true)}>
-      <Menu size={26} color="#fff" />
-    </Pressable>
-
-    <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>
-      {selected.length ? `${selected.length} selected` : 'Favorites'}
-    </Text>
-
-    <View style={{ flexDirection: 'row', gap: 14 }}>
-      <Pressable onPress={exportFavorites}>
-        <Ionicons name="share-outline" size={22} color="#fff" />
-      </Pressable>
-
-      {selected.length > 0 && (
-        <Pressable onPress={() => removeFavorites(selected)}>
-          <Ionicons name="trash-outline" size={22} color="#EF4444" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
+      {/* HEADER */}
+      <View
+        style={{
+          height: 60,
+          paddingHorizontal: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          backgroundColor: headerBg,
+        }}
+      >
+        <Pressable onPress={() => setMenuOpen(true)}>
+          <Menu size={26} color={text} />
         </Pressable>
-      )}
-    </View>
-  </View>
 
-  {/* DRAWER / MENU */}
-  {menuOpen && <Header setMenuOpen={setMenuOpen} />}
-      <View>
-       
+        <Text style={{ color: text, fontSize: 18, fontWeight: '600' }}>
+          {selected.length ? `${selected.length} selected` : 'Favorites'}
+        </Text>
 
-        {/* SEARCH */}
-        <View style={{ padding: 16 }}>
-          <TextInput
-            placeholder="Search favorites..."
-            placeholderTextColor="#6B7280"
-            value={search}
-            onChangeText={setSearch}
-            style={{
-              backgroundColor: '#161616',
-              color: '#fff',
-              padding: 12,
-              borderRadius: 10,
-            }}
-          />
-        </View>
+        <View style={{ flexDirection: 'row', gap: 14 }}>
+          <Pressable onPress={exportFavorites}>
+            <Ionicons name="share-outline" size={22} color={text} />
+          </Pressable>
 
-        {/* SORT */}
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-around',
-            paddingBottom: 10,
-          }}
-        >
-          {[
-            { label: 'Newest', value: 'date-desc' },
-            { label: 'Oldest', value: 'date-asc' },
-            { label: 'Type', value: 'type' },
-          ].map((s) => (
-            <Pressable
-              key={s.value}
-              onPress={() => setSort(s.value as SortType)}
-            >
-              <Text
-                style={{
-                  color: sort === s.value ? '#22C55E' : '#9CA3AF',
-                }}
-              >
-                {s.label}
-              </Text>
+          {selected.length > 0 && (
+            <Pressable onPress={() => removeFavorites(selected)}>
+              <Ionicons name="trash-outline" size={22} color="#EF4444" />
             </Pressable>
-          ))}
+          )}
         </View>
+      </View>
 
-        {/* LIST */}
-        <FlatList
-          data={processed}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 16 }}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={async () => {
-                setRefreshing(true);
-                await loadFavorites();
-                setRefreshing(false);
-              }}
-              tintColor="#EF4444"
-            />
-          }
-          ListEmptyComponent={
-            <Text
-              style={{
-                color: '#9CA3AF',
-                textAlign: 'center',
-                marginTop: 40,
-              }}
-            >
-              No favorites
-            </Text>
-          }
-          renderItem={({ item }) => {
-            const isSelected = selected.includes(item.id);
+      {/* DRAWER */}
+      {menuOpen && <Header setMenuOpen={setMenuOpen} />}
 
-            return (
-              <Pressable
-                onLongPress={() => toggleSelect(item.id)}
-                onPress={() =>
-                  selected.length
-                    ? toggleSelect(item.id)
-                    : router.push({
-                        pathname: '/scan-result',
-                        params: {
-                          result: item.data,
-                          type: item.type,
-                        },
-                      })
-                }
-                style={{
-                  backgroundColor: isSelected
-                    ? '#1F2937'
-                    : '#161616',
-                  padding: 14,
-                  borderRadius: 12,
-                  marginBottom: 12,
-                  borderWidth: isSelected ? 1 : 0,
-                  borderColor: '#22C55E',
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <Text style={{ color: '#22C55E', fontSize: 13 }}>
-                    {item.type}
-                  </Text>
-
-                  {isSelected && (
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={20}
-                      color="#22C55E"
-                    />
-                  )}
-                </View>
-
-                <Text
-                  style={{ color: '#E5E7EB', fontSize: 15 }}
-                  numberOfLines={2}
-                >
-                  {item.data}
-                </Text>
-
-                <Text
-                  style={{
-                    color: '#6B7280',
-                    fontSize: 12,
-                    marginTop: 6,
-                  }}
-                >
-                  {new Date(item.time).toLocaleString()}
-                </Text>
-              </Pressable>
-            );
+      {/* SEARCH */}
+      <View style={{ padding: 16 }}>
+        <TextInput
+          placeholder="Search favorites..."
+          placeholderTextColor={muted}
+          value={search}
+          onChangeText={setSearch}
+          style={{
+            backgroundColor: card,
+            color: text,
+            padding: 12,
+            borderRadius: 10,
           }}
         />
       </View>
+
+      {/* SORT */}
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          paddingBottom: 10,
+        }}
+      >
+        {[
+          { label: 'Newest', value: 'date-desc' },
+          { label: 'Oldest', value: 'date-asc' },
+          { label: 'Type', value: 'type' },
+        ].map((s) => (
+          <Pressable
+            key={s.value}
+            onPress={() => setSort(s.value as SortType)}
+          >
+            <Text
+              style={{
+                color: sort === s.value ? '#22C55E' : muted,
+              }}
+            >
+              {s.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* LIST */}
+      <FlatList
+        data={processed}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ padding: 16 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={async () => {
+              setRefreshing(true);
+              await loadFavorites();
+              setRefreshing(false);
+            }}
+            tintColor="#EF4444"
+          />
+        }
+        ListEmptyComponent={
+          <Text
+            style={{
+              color: muted,
+              textAlign: 'center',
+              marginTop: 40,
+            }}
+          >
+            No favorites
+          </Text>
+        }
+        renderItem={({ item }) => {
+          const isSelected = selected.includes(item.id);
+
+          return (
+            <Pressable
+              onLongPress={() => toggleSelect(item.id)}
+              onPress={() =>
+                selected.length
+                  ? toggleSelect(item.id)
+                  : router.push({
+                      pathname: '/scan-result',
+                      params: {
+                        result: item.data,
+                        type: item.type,
+                      },
+                    })
+              }
+              style={{
+                backgroundColor: isSelected ? '#1F2937' : card,
+                padding: 14,
+                borderRadius: 12,
+                marginBottom: 12,
+                borderWidth: isSelected ? 1 : 0,
+                borderColor: '#22C55E',
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <Text style={{ color: '#22C55E', fontSize: 13 }}>
+                  {item.type}
+                </Text>
+
+                {isSelected && (
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={20}
+                    color="#22C55E"
+                  />
+                )}
+              </View>
+
+              <Text
+                style={{ color: text, fontSize: 15 }}
+                numberOfLines={2}
+              >
+                {item.data}
+              </Text>
+
+              <Text
+                style={{
+                  color: muted,
+                  fontSize: 12,
+                  marginTop: 6,
+                }}
+              >
+                {new Date(item.time).toLocaleString()}
+              </Text>
+            </Pressable>
+          );
+        }}
+      />
     </SafeAreaView>
   );
 }

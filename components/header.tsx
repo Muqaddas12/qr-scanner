@@ -1,12 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Pressable,
   View,
   Text,
-  Share,
   Alert,
   StyleSheet,
   Image,
+  Linking,
 } from "react-native";
 import { useRouter, usePathname } from "expo-router";
 import { Dimensions } from "react-native";
@@ -19,6 +19,7 @@ import {
   Settings,
   Share2,
   Image as ImageIcon,
+  Store,
 } from "lucide-react-native";
 
 import Animated, {
@@ -28,6 +29,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { PanGestureHandler } from "react-native-gesture-handler";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("screen");
 
@@ -38,6 +40,26 @@ type HeaderProps = {
 export default function Header({ setMenuOpen }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
+
+  const [isDark, setIsDark] = useState(true);
+
+  /* ---------------- THEME ---------------- */
+
+  useEffect(() => {
+    (async () => {
+      const saved = await AsyncStorage.getItem("APP_THEME");
+      if (saved === "light") setIsDark(false);
+    })();
+  }, []);
+
+  const bg = isDark ? "#111" : "#FFFFFF";
+  const text = isDark ? "#fff" : "#111827";
+  const subText = isDark ? "#6B7280" : "#9CA3AF";
+  const activeBg = isDark
+    ? "rgba(0,255,204,0.15)"
+    : "rgba(37,99,235,0.12)";
+
+  /* ---------------- ANIMATION ---------------- */
 
   const translateX = useSharedValue(-width);
 
@@ -54,6 +76,8 @@ export default function Header({ setMenuOpen }: HeaderProps) {
     setTimeout(() => setMenuOpen(false), 200);
   };
 
+  /* ---------------- MENU ---------------- */
+
   const menuItems = [
     { label: "Scan", route: "/(tabs)", icon: ScanLine },
     { label: "Scan Images", route: null, icon: ImageIcon },
@@ -62,7 +86,8 @@ export default function Header({ setMenuOpen }: HeaderProps) {
     { label: "My QR", route: "/MyQRScreen", icon: QrCode },
     { label: "Create QR", route: "/(tabs)/GenerateQr", icon: PlusSquare },
     { label: "Settings", route: "/settings", icon: Settings },
-    { label: "Share our app", route: "share", icon: Share2 },
+    { label: "Share Our Apps", route: "share", icon: Store },
+    { label: "Our Apps", route: "Ourapps", icon: Share2 },
   ];
 
   return (
@@ -78,15 +103,20 @@ export default function Header({ setMenuOpen }: HeaderProps) {
           }
         }}
       >
-        <Animated.View style={[styles.drawer, animatedStyle]}>
-
-          {/* APP LOGO */}
+        <Animated.View
+          style={[
+            styles.drawer,
+            animatedStyle,
+            { backgroundColor: bg },
+          ]}
+        >
+          {/* HEADER */}
           <View style={styles.drawerHeader}>
             <Image
-              source={require("@/assets/images/logo.png")} 
+              source={require("@/assets/images/logo.png")}
               style={styles.logo}
             />
-            <Text style={styles.drawerTitle}>
+            <Text style={[styles.drawerTitle, { color: text }]}>
               QR & Barcode Scanner
             </Text>
           </View>
@@ -94,30 +124,37 @@ export default function Header({ setMenuOpen }: HeaderProps) {
           {/* MENU ITEMS */}
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive =
-  (item.label === "Scan" &&
-    (pathname === "/" || pathname === "/(tabs)" || pathname.includes("index"))) ||
-  (item.label === "Create QR" &&
-    pathname.includes("GenerateQr")) ||
-  (item.route &&
-    !item.route.includes("(tabs)") &&
-    pathname.startsWith(item.route));
 
+            const isActive =
+              (item.label === "Scan" &&
+                (pathname === "/" ||
+                  pathname === "/(tabs)" ||
+                  pathname.includes("index"))) ||
+              (item.label === "Create QR" &&
+                pathname.includes("GenerateQr")) ||
+              (item.route &&
+                !item.route.includes("(tabs)") &&
+                pathname.startsWith(item.route));
 
             return (
               <Pressable
                 key={item.label}
                 style={[
                   styles.drawerItem,
-                  isActive && styles.activeItem,
+                  isActive && { backgroundColor: activeBg },
                 ]}
                 onPress={() => {
                   closeDrawer();
 
+                  if (item.route === "Ourapps") {
+                    Linking.openURL(
+                      "https://play.google.com/store/apps/developer?id=MTBYOWN"
+                    );
+                    return;
+                  }
+
                   if (item.route === "share") {
-                    Share.share({
-                      message: "Check out this QR Scanner app!",
-                    });
+                    Alert.alert(item.label, "Coming Soon");
                     return;
                   }
 
@@ -131,12 +168,14 @@ export default function Header({ setMenuOpen }: HeaderProps) {
               >
                 <Icon
                   size={22}
-                  color={isActive ? "#00ffcc" : "#fff"}
+                  color={isActive ? "#00ffcc" : text}
                   style={{ marginRight: 12 }}
                 />
+
                 <Text
                   style={[
                     styles.drawerText,
+                    { color: text },
                     isActive && styles.activeText,
                   ]}
                 >
@@ -146,16 +185,20 @@ export default function Header({ setMenuOpen }: HeaderProps) {
             );
           })}
 
-          {/* VERSION INFO */}
+          {/* VERSION */}
           <View style={styles.versionBox}>
-            <Text style={styles.versionText}>Version 1.0.0</Text>
+            <Text style={[styles.versionText, { color: subText }]}>
+              Version 1.0.0
+            </Text>
           </View>
-
         </Animated.View>
       </PanGestureHandler>
     </>
   );
 }
+
+/* ---------------- STYLES ---------------- */
+
 const styles = StyleSheet.create({
   overlay: {
     position: "absolute",
@@ -170,7 +213,6 @@ const styles = StyleSheet.create({
     top: 0,
     width: "75%",
     height: height,
-    backgroundColor: "#111",
     paddingTop: 50,
     zIndex: 100,
   },
@@ -190,7 +232,6 @@ const styles = StyleSheet.create({
   },
 
   drawerTitle: {
-    color: "#fff",
     fontSize: 20,
     fontWeight: "700",
   },
@@ -203,18 +244,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
 
-  activeItem: {
-    backgroundColor: "rgba(0,255,204,0.15)",
-  },
-
-  drawerText: {
-    color: "#fff",
-    fontSize: 16,
-  },
-
   activeText: {
     color: "#00ffcc",
     fontWeight: "600",
+  },
+
+  drawerText: {
+    fontSize: 16,
   },
 
   versionBox: {
@@ -225,7 +261,6 @@ const styles = StyleSheet.create({
   },
 
   versionText: {
-    color: "#6B7280",
     fontSize: 13,
   },
 });

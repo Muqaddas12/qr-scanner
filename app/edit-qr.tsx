@@ -28,6 +28,21 @@ export default function EditQRScreen() {
 
   const [value, setValue] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isDark, setIsDark] = useState(true);
+
+  /* ---------------- THEME ---------------- */
+
+  useEffect(() => {
+    (async () => {
+      const saved = await AsyncStorage.getItem('APP_THEME');
+      if (saved === 'light') setIsDark(false);
+    })();
+  }, []);
+
+  const bg = isDark ? '#0B0B0B' : '#F9FAFB';
+  const headerBg = isDark ? '#111' : '#FFFFFF';
+  const card = isDark ? '#161616' : '#FFFFFF';
+  const text = isDark ? '#E5E7EB' : '#111827';
 
   const showToast = (msg: string) => {
     Platform.OS === 'android'
@@ -35,7 +50,8 @@ export default function EditQRScreen() {
       : alert(msg);
   };
 
-  // Load QR to edit
+  /* ---------------- LOAD QR ---------------- */
+
   useEffect(() => {
     const loadQR = async () => {
       const stored = await AsyncStorage.getItem('CREATED_QR');
@@ -55,6 +71,8 @@ export default function EditQRScreen() {
     loadQR();
   }, [editId]);
 
+  /* ---------------- SAVE ---------------- */
+
   const saveEdit = async () => {
     if (!value.trim()) return;
 
@@ -72,12 +90,14 @@ export default function EditQRScreen() {
     router.back();
   };
 
+  /* ---------------- LOADING ---------------- */
+
   if (loading) {
     return (
       <SafeAreaView
         style={{
           flex: 1,
-          backgroundColor: '#0B0B0B',
+          backgroundColor: bg,
           alignItems: 'center',
           justifyContent: 'center',
         }}
@@ -87,8 +107,10 @@ export default function EditQRScreen() {
     );
   }
 
+  /* ---------------- UI ---------------- */
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
       {/* HEADER */}
       <View
         style={{
@@ -96,16 +118,16 @@ export default function EditQRScreen() {
           paddingHorizontal: 16,
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: '#111',
+          backgroundColor: headerBg,
         }}
       >
         <Pressable onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={26} color="#fff" />
+          <Ionicons name="arrow-back" size={26} color={text} />
         </Pressable>
 
         <Text
           style={{
-            color: '#fff',
+            color: text,
             fontSize: 18,
             fontWeight: '600',
             marginLeft: 16,
@@ -124,8 +146,8 @@ export default function EditQRScreen() {
           placeholder="Edit QR text"
           placeholderTextColor="#6B7280"
           style={{
-            backgroundColor: '#161616',
-            color: '#fff',
+            backgroundColor: card,
+            color: text,
             padding: 14,
             borderRadius: 12,
             minHeight: 80,

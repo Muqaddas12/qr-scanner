@@ -20,11 +20,28 @@ export default function ScanResult() {
   const router = useRouter();
 
   const [favorite, setFavorite] = useState(false);
+  const [isDark, setIsDark] = useState(true);
 
   const date = new Date().toLocaleDateString();
   const time = new Date().toLocaleTimeString();
 
   const data = String(result || '');
+
+  /* ---------------- THEME ---------------- */
+
+  useEffect(() => {
+    (async () => {
+      const saved = await AsyncStorage.getItem('APP_THEME');
+      if (saved === 'light') setIsDark(false);
+    })();
+  }, []);
+
+  const bg = isDark ? '#0B0B0B' : '#F9FAFB';
+  const headerBg = isDark ? '#111' : '#FFFFFF';
+  const card = isDark ? '#161616' : '#FFFFFF';
+  const resultBg = isDark ? '#111' : '#F3F4F6';
+  const text = isDark ? '#E5E7EB' : '#111827';
+  const muted = '#9CA3AF';
 
   /* ---------------- HELPERS ---------------- */
 
@@ -32,7 +49,7 @@ export default function ScanResult() {
     if (Platform.OS === 'android') {
       ToastAndroid.show(msg, ToastAndroid.SHORT);
     } else {
-      alert(msg); // simple iOS fallback
+      alert(msg);
     }
   };
 
@@ -65,53 +82,50 @@ export default function ScanResult() {
   /* ---------------- TOGGLE FAVORITE ---------------- */
 
   const toggleFavorite = async () => {
-  const [scanStored, createdStored] = await Promise.all([
-    AsyncStorage.getItem('SCAN_HISTORY'),
-    AsyncStorage.getItem('CREATED_QR'),
-  ]);
+    const [scanStored, createdStored] = await Promise.all([
+      AsyncStorage.getItem('SCAN_HISTORY'),
+      AsyncStorage.getItem('CREATED_QR'),
+    ]);
 
-  const scanHistory = scanStored ? JSON.parse(scanStored) : [];
-  const createdHistory = createdStored ? JSON.parse(createdStored) : [];
+    const scanHistory = scanStored ? JSON.parse(scanStored) : [];
+    const createdHistory = createdStored ? JSON.parse(createdStored) : [];
 
-  // 🔍 check in BOTH places
-  const alreadyFavInScan = scanHistory.find(
-    (i: any) => i.data === data && i.favorite
-  );
+    const alreadyFavInScan = scanHistory.find(
+      (i: any) => i.data === data && i.favorite
+    );
 
-  const alreadyFavInCreated = createdHistory.find(
-    (i: any) => i.data === data && i.favorite
-  );
+    const alreadyFavInCreated = createdHistory.find(
+      (i: any) => i.data === data && i.favorite
+    );
 
-  if (alreadyFavInScan || alreadyFavInCreated) {
-    showToast('Already in Favorites');
+    if (alreadyFavInScan || alreadyFavInCreated) {
+      showToast('Already in Favorites');
+      setFavorite(true);
+      return;
+    }
+
+    const index = scanHistory.findIndex((i: any) => i.data === data);
+
+    if (index !== -1) {
+      scanHistory[index].favorite = true;
+    } else {
+      scanHistory.unshift({
+        id: Date.now().toString(),
+        type,
+        data,
+        time: new Date().toISOString(),
+        favorite: true,
+      });
+    }
+
+    await AsyncStorage.setItem(
+      'SCAN_HISTORY',
+      JSON.stringify(scanHistory)
+    );
+
     setFavorite(true);
-    return;
-  }
-
-  // ⬇️ existing logic (SCAN_HISTORY as source of truth for scan)
-  const index = scanHistory.findIndex((i: any) => i.data === data);
-
-  if (index !== -1) {
-    scanHistory[index].favorite = true;
-  } else {
-    scanHistory.unshift({
-      id: Date.now().toString(),
-      type,
-      data,
-      time: new Date().toISOString(),
-      favorite: true,
-    });
-  }
-
-  await AsyncStorage.setItem(
-    'SCAN_HISTORY',
-    JSON.stringify(scanHistory)
-  );
-
-  setFavorite(true);
-  showToast('Added to Favorites');
-};
-
+    showToast('Added to Favorites');
+  };
 
   /* ---------------- ACTIONS ---------------- */
 
@@ -136,7 +150,7 @@ export default function ScanResult() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
       <View style={{ flex: 1 }}>
         {/* HEADER */}
         <View
@@ -146,19 +160,19 @@ export default function ScanResult() {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            backgroundColor: '#111',
+            backgroundColor: headerBg,
           }}
         >
           <Pressable onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={26} color="#fff" />
+            <Ionicons name="arrow-back" size={26} color={text} />
           </Pressable>
 
-          <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>
+          <Text style={{ color: text, fontSize: 18, fontWeight: '600' }}>
             Scan Result
           </Text>
 
           <Pressable onPress={() => router.push('/history')}>
-            <Feather name="clock" size={22} color="#fff" />
+            <Feather name="clock" size={22} color={text} />
           </Pressable>
         </View>
 
@@ -168,11 +182,11 @@ export default function ScanResult() {
             margin: 16,
             padding: 14,
             borderRadius: 12,
-            backgroundColor: '#161616',
+            backgroundColor: card,
           }}
         >
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={{ color: '#9CA3AF' }}>Type</Text>
+            <Text style={{ color: muted }}>Type</Text>
             <Text style={{ color: '#22C55E', fontWeight: '600' }}>
               {type} • {detected}
             </Text>
@@ -185,7 +199,7 @@ export default function ScanResult() {
               marginTop: 6,
             }}
           >
-            <Text style={{ color: '#9CA3AF' }}>
+            <Text style={{ color: muted }}>
               {date} • {time}
             </Text>
 
@@ -193,7 +207,7 @@ export default function ScanResult() {
               <Ionicons
                 name={favorite ? 'heart' : 'heart-outline'}
                 size={22}
-                color={favorite ? '#EF4444' : '#fff'}
+                color={favorite ? '#EF4444' : text}
               />
             </Pressable>
           </View>
@@ -205,11 +219,11 @@ export default function ScanResult() {
             flex: 1,
             marginHorizontal: 16,
             padding: 14,
-            backgroundColor: '#111',
+            backgroundColor: resultBg,
             borderRadius: 12,
           }}
         >
-          <Text style={{ color: '#E5E7EB', fontSize: 16 }}>{data}</Text>
+          <Text style={{ color: text, fontSize: 16 }}>{data}</Text>
         </ScrollView>
 
         {/* ACTIONS */}

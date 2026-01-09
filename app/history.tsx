@@ -34,13 +34,29 @@ type Section = {
 
 export default function HistoryScreen() {
   const router = useRouter();
-const [menuOpen,setMenuOpen]=useState(false)
+  const [menuOpen, setMenuOpen] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  const [isDark, setIsDark] = useState(true);
 
   const openSwipeRef = useRef<Swipeable | null>(null);
+
+  /* ---------------- THEME ---------------- */
+
+  useEffect(() => {
+    (async () => {
+      const saved = await AsyncStorage.getItem('APP_THEME');
+      if (saved === 'light') setIsDark(false);
+    })();
+  }, []);
+
+  const bg = isDark ? '#0B0B0B' : '#F9FAFB';
+  const headerBg = isDark ? '#111' : '#FFFFFF';
+  const card = isDark ? '#161616' : '#FFFFFF';
+  const text = isDark ? '#E5E7EB' : '#111827';
+  const muted = '#6B7280';
 
   /* ---------------- TOAST ---------------- */
 
@@ -116,8 +132,6 @@ const [menuOpen,setMenuOpen]=useState(false)
         : [...prev, id]
     );
   };
-
-  const clearSelection = () => setSelected([]);
 
   const deleteItem = (id: string) => {
     const updated = history.filter((i) => i.id !== id);
@@ -217,7 +231,7 @@ const [menuOpen,setMenuOpen]=useState(false)
                 })
           }
           style={{
-            backgroundColor: isSelected ? '#1F2937' : '#161616',
+            backgroundColor: isSelected ? '#1F2937' : card,
             padding: 14,
             borderRadius: 12,
             marginBottom: 12,
@@ -241,7 +255,7 @@ const [menuOpen,setMenuOpen]=useState(false)
                 <Ionicons
                   name={item.favorite ? 'heart' : 'heart-outline'}
                   size={20}
-                  color={item.favorite ? '#EF4444' : '#fff'}
+                  color={item.favorite ? '#EF4444' : text}
                 />
               </Pressable>
 
@@ -256,7 +270,7 @@ const [menuOpen,setMenuOpen]=useState(false)
           </View>
 
           <Text
-            style={{ color: '#E5E7EB', fontSize: 15 }}
+            style={{ color: text, fontSize: 15 }}
             numberOfLines={2}
           >
             {item.data}
@@ -264,7 +278,7 @@ const [menuOpen,setMenuOpen]=useState(false)
 
           <Text
             style={{
-              color: '#6B7280',
+              color: muted,
               fontSize: 12,
               marginTop: 6,
             }}
@@ -277,94 +291,91 @@ const [menuOpen,setMenuOpen]=useState(false)
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
-
-  {/* HEADER BAR */}
-  <View
-    style={{
-      height: 60,
-      paddingHorizontal: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: '#111',
-    }}
-  >
-    <Pressable onPress={() => setMenuOpen(true)}>
-      <Menu size={26} color="#fff" />
-    </Pressable>
-
-    <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>
-      {selected.length ? `${selected.length} selected` : 'History'}
-    </Text>
-
-    <View style={{ flexDirection: 'row', gap: 14 }}>
-      <Pressable onPress={exportHistory}>
-        <Ionicons name="share-outline" size={22} color="#fff" />
-      </Pressable>
-
-      {!selected.length && (
-        <Pressable onPress={clearHistory}>
-          <Ionicons name="trash-outline" size={22} color="#fff" />
-        </Pressable>
-      )}
-    </View>
-  </View>
-
-  {/* SIDEBAR / DRAWER */}
-  {menuOpen && <Header setMenuOpen={setMenuOpen} />}
-
-  {/* SEARCH */}
-  <View style={{ padding: 16 }}>
-    <TextInput
-      placeholder="Search history..."
-      placeholderTextColor="#6B7280"
-      value={search}
-      onChangeText={setSearch}
-      style={{
-        backgroundColor: '#161616',
-        color: '#fff',
-        padding: 12,
-        borderRadius: 10,
-      }}
-    />
-  </View>
-
-  {/* LIST */}
-  <FlatList
-    data={groupedData}
-    keyExtractor={(item) => item.title}
-    refreshControl={
-      <RefreshControl
-        refreshing={refreshing}
-        onRefresh={async () => {
-          setRefreshing(true);
-          await loadHistory();
-          setRefreshing(false);
+    <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
+      {/* HEADER BAR */}
+      <View
+        style={{
+          height: 60,
+          paddingHorizontal: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          backgroundColor: headerBg,
         }}
-        tintColor="#22C55E"
-      />
-    }
-    renderItem={({ item }) => (
-      <View>
-        <Text
-          style={{
-            color: '#9CA3AF',
-            marginLeft: 16,
-            marginBottom: 8,
-          }}
-        >
-          {item.title}
+      >
+        <Pressable onPress={() => setMenuOpen(true)}>
+          <Menu size={26} color={text} />
+        </Pressable>
+
+        <Text style={{ color: text, fontSize: 18, fontWeight: '600' }}>
+          {selected.length ? `${selected.length} selected` : 'History'}
         </Text>
 
-        {item.data.map((row) => (
-          <View key={row.id}>{renderItem({ item: row })}</View>
-        ))}
+        <View style={{ flexDirection: 'row', gap: 14 }}>
+          <Pressable onPress={exportHistory}>
+            <Ionicons name="share-outline" size={22} color={text} />
+          </Pressable>
+
+          {!selected.length && (
+            <Pressable onPress={clearHistory}>
+              <Ionicons name="trash-outline" size={22} color={text} />
+            </Pressable>
+          )}
+        </View>
       </View>
-    )}
-  />
 
-</SafeAreaView>
+      {/* SIDEBAR */}
+      {menuOpen && <Header setMenuOpen={setMenuOpen} />}
 
+      {/* SEARCH */}
+      <View style={{ padding: 16 }}>
+        <TextInput
+          placeholder="Search history..."
+          placeholderTextColor={muted}
+          value={search}
+          onChangeText={setSearch}
+          style={{
+            backgroundColor: card,
+            color: text,
+            padding: 12,
+            borderRadius: 10,
+          }}
+        />
+      </View>
+
+      {/* LIST */}
+      <FlatList
+        data={groupedData}
+        keyExtractor={(item) => item.title}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={async () => {
+              setRefreshing(true);
+              await loadHistory();
+              setRefreshing(false);
+            }}
+            tintColor="#22C55E"
+          />
+        }
+        renderItem={({ item }) => (
+          <View>
+            <Text
+              style={{
+                color: muted,
+                marginLeft: 16,
+                marginBottom: 8,
+              }}
+            >
+              {item.title}
+            </Text>
+
+            {item.data.map((row) => (
+              <View key={row.id}>{renderItem({ item: row })}</View>
+            ))}
+          </View>
+        )}
+      />
+    </SafeAreaView>
   );
 }

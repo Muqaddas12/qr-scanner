@@ -18,6 +18,7 @@ import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 import Header from '@/components/header';
 import { Menu } from 'lucide-react-native';
+
 type QRItem = {
   id: string;
   data: string;
@@ -29,11 +30,30 @@ type QRItem = {
 export default function MyQRScreen() {
   const router = useRouter();
   const qrRef = useRef<any>(null);
-const [menuOpen,setMenuOpen]=useState(false)
+
+  const [menuOpen, setMenuOpen] = useState(false);
   const [list, setList] = useState<QRItem[]>([]);
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [sortNewest, setSortNewest] = useState(true);
+  const [isDark, setIsDark] = useState(true);
+
+  /* ---------------- THEME ---------------- */
+
+  useEffect(() => {
+    (async () => {
+      const saved = await AsyncStorage.getItem('APP_THEME');
+      if (saved === 'light') setIsDark(false);
+    })();
+  }, []);
+
+  const bg = isDark ? '#0B0B0B' : '#F9FAFB';
+  const headerBg = isDark ? '#111' : '#FFFFFF';
+  const card = isDark ? '#161616' : '#FFFFFF';
+  const text = isDark ? '#E5E7EB' : '#111827';
+  const subText = isDark ? '#9CA3AF' : '#6B7280';
+
+  /* ---------------- DATA ---------------- */
 
   const loadQR = async () => {
     const stored = await AsyncStorage.getItem('CREATED_QR');
@@ -92,193 +112,171 @@ const [menuOpen,setMenuOpen]=useState(false)
 
   const editQR = (item: QRItem) => {
     router.push({
-  pathname: '/edit-qr',
-  params: { editId: item.id },
-});
-
+      pathname: '/edit-qr',
+      params: { editId: item.id },
+    });
   };
 
   const filtered = list
-    .filter(i =>
-      i.data.toLowerCase().includes(search.toLowerCase())
-    )
+    .filter(i => i.data.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) =>
       sortNewest
         ? new Date(b.time).getTime() - new Date(a.time).getTime()
         : new Date(a.time).getTime() - new Date(b.time).getTime()
     );
 
-const renderItem = ({ item }: { item: QRItem }) => (
-  <View
-    style={{
-      flexDirection: "row",
-      backgroundColor: "#fff",
-      borderRadius: 12,
-      padding: 12,
-      marginBottom: 12,
-      alignItems: "center",
-      gap: 12,
-    }}
-  >
-    {/* QR PREVIEW */}
-    <QRCode
-      value={item.data}
-      size={70}
-      getRef={(c) => (qrRef.current = c)}
-    />
-
-    {/* RIGHT CONTENT */}
-    <View style={{ flex: 1 }}>
-      {/* TOP ROW */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 4,
-        }}
-      >
-        <View
-          style={{
-            backgroundColor: "#E5E7EB",
-            paddingHorizontal: 8,
-            paddingVertical: 2,
-            borderRadius: 6,
-          }}
-        >
-          <Text style={{ fontSize: 12 }}>{item.type}</Text>
-        </View>
-
-        <Pressable onPress={() => toggleFavorite(item.id)}>
-          <Ionicons
-            name={item.favorite ? "heart" : "heart-outline"}
-            size={18}
-            color="#EF4444"
-          />
-        </Pressable>
-      </View>
-
-      {/* DATA */}
-      <Text
-        numberOfLines={2}
-        style={{ fontSize: 13, color: "#111" }}
-      >
-        {item.data}
-      </Text>
-
-      {/* ACTIONS */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginTop: 8,
-          paddingRight: 10,
-        }}
-      >
-        <Pressable onPress={() => editQR(item)}>
-          <Ionicons name="create-outline" size={20} color="#2563EB" />
-        </Pressable>
-
-        <Pressable onPress={() => shareQR(item.data)}>
-          <Ionicons
-            name="share-social-outline"
-            size={20}
-            color="#16A34A"
-          />
-        </Pressable>
-
-        <Pressable onPress={() => downloadQR(item.id)}>
-          <Ionicons name="download-outline" size={20} color="#7C3AED" />
-        </Pressable>
-
-        <Pressable onPress={() => deleteQR(item.id)}>
-          <Ionicons name="trash-outline" size={20} color="#DC2626" />
-        </Pressable>
-      </View>
-    </View>
-  </View>
-);
-
-  return (
- <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
-
-  {/* HEADER BAR */}
-  <View
-    style={{
-      height: 60,
-      paddingHorizontal: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#111',
-    }}
-  >
-    <Pressable onPress={() => setMenuOpen(true)}>
-      <Menu size={26} color="#fff" />
-    </Pressable>
-
-    <Text
+  const renderItem = ({ item }: { item: QRItem }) => (
+    <View
       style={{
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: '600',
-        marginLeft: 16,
-        flex: 1,
+        flexDirection: 'row',
+        backgroundColor: card,
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 12,
+        alignItems: 'center',
+        gap: 12,
       }}
     >
-      My QR Codes
-    </Text>
+      <QRCode value={item.data} size={70} getRef={c => (qrRef.current = c)} />
 
-    <Pressable onPress={() => setSortNewest(!sortNewest)}>
-      <Ionicons
-        name={sortNewest ? 'time-outline' : 'swap-vertical-outline'}
-        size={22}
-        color="#fff"
-      />
-    </Pressable>
-  </View>
+      <View style={{ flex: 1 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 4,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: isDark ? '#1F2937' : '#E5E7EB',
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              borderRadius: 6,
+            }}
+          >
+            <Text style={{ fontSize: 12, color: text }}>{item.type}</Text>
+          </View>
 
-  {/* SIDEBAR / DRAWER */}
-  {menuOpen && <Header setMenuOpen={setMenuOpen} />}
+          <Pressable onPress={() => toggleFavorite(item.id)}>
+            <Ionicons
+              name={item.favorite ? 'heart' : 'heart-outline'}
+              size={18}
+              color="#EF4444"
+            />
+          </Pressable>
+        </View>
 
-  {/* SEARCH */}
-  <View style={{ padding: 16 }}>
-    <TextInput
-      placeholder="Search QR..."
-      placeholderTextColor="#9CA3AF"
-      value={search}
-      onChangeText={setSearch}
-      style={{
-        backgroundColor: '#161616',
-        color: '#fff',
-        padding: 12,
-        borderRadius: 10,
-      }}
-    />
-  </View>
+        <Text numberOfLines={2} style={{ fontSize: 13, color: text }}>
+          {item.data}
+        </Text>
 
-  {/* LIST */}
-  <FlatList
-    data={filtered}
-    keyExtractor={(i) => i.id}
-    renderItem={renderItem}
-    contentContainerStyle={{ padding: 16 }}
-    refreshControl={
-      <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-    }
-    ListEmptyComponent={
-      <Text
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            marginTop: 8,
+            paddingRight: 10,
+          }}
+        >
+          <Pressable onPress={() => editQR(item)}>
+            <Ionicons name="create-outline" size={20} color="#2563EB" />
+          </Pressable>
+
+          <Pressable onPress={() => shareQR(item.data)}>
+            <Ionicons name="share-social-outline" size={20} color="#16A34A" />
+          </Pressable>
+
+          <Pressable onPress={() => downloadQR(item.id)}>
+            <Ionicons name="download-outline" size={20} color="#7C3AED" />
+          </Pressable>
+
+          <Pressable onPress={() => deleteQR(item.id)}>
+            <Ionicons name="trash-outline" size={20} color="#DC2626" />
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
+      {/* HEADER BAR */}
+      <View
         style={{
-          color: '#9CA3AF',
-          textAlign: 'center',
-          marginTop: 40,
+          height: 60,
+          paddingHorizontal: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: headerBg,
         }}
       >
-        No saved QR codes
-      </Text>
-    }
-  />
+        <Pressable onPress={() => setMenuOpen(true)}>
+          <Menu size={26} color={text} />
+        </Pressable>
 
-</SafeAreaView>
+        <Text
+          style={{
+            color: text,
+            fontSize: 18,
+            fontWeight: '600',
+            marginLeft: 16,
+            flex: 1,
+          }}
+        >
+          My QR Codes
+        </Text>
 
+        <Pressable onPress={() => setSortNewest(!sortNewest)}>
+          <Ionicons
+            name={sortNewest ? 'time-outline' : 'swap-vertical-outline'}
+            size={22}
+            color={text}
+          />
+        </Pressable>
+      </View>
+
+      {/* SIDEBAR */}
+      {menuOpen && <Header setMenuOpen={setMenuOpen} />}
+
+      {/* SEARCH */}
+      <View style={{ padding: 16 }}>
+        <TextInput
+          placeholder="Search QR..."
+          placeholderTextColor={subText}
+          value={search}
+          onChangeText={setSearch}
+          style={{
+            backgroundColor: card,
+            color: text,
+            padding: 12,
+            borderRadius: 10,
+          }}
+        />
+      </View>
+
+      {/* LIST */}
+      <FlatList
+        data={filtered}
+        keyExtractor={i => i.id}
+        renderItem={renderItem}
+        contentContainerStyle={{ padding: 16 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListEmptyComponent={
+          <Text
+            style={{
+              color: subText,
+              textAlign: 'center',
+              marginTop: 40,
+            }}
+          >
+            No saved QR codes
+          </Text>
+        }
+      />
+    </SafeAreaView>
   );
 }
