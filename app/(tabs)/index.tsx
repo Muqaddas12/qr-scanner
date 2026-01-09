@@ -6,6 +6,7 @@ import {
   Pressable,
   Alert,
   Vibration,
+  Share,
 } from 'react-native';
 import {
   ScanLine,
