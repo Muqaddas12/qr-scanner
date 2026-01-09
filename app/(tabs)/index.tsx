@@ -7,6 +7,17 @@ import {
   Alert,
   Vibration,
 } from 'react-native';
+import {
+  ScanLine,
+  Image,
+  Heart,
+  History,
+  QrCode,
+  PlusSquare,
+  Settings,
+  Share2,
+} from 'lucide-react-native';
+
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -149,7 +160,8 @@ export default function HomeScreen() {
       </View>
 
       {/* SIDEBAR */}
-    {menuOpen && (
+{/* SIDEBAR */}
+{menuOpen && (
   <>
     <Pressable
       style={styles.overlay}
@@ -158,44 +170,48 @@ export default function HomeScreen() {
 
     <View style={styles.drawer}>
       {[
-        { label: 'Scan', route: '/(tabs)' },          // scanner home
-        { label: 'Scan Images', route: null },        // handle separately
-        { label: 'Favorites', route: '/favorites' },
-        { label: 'History', route: '/history' },
-        { label: 'My QR', route: '/MyQRScreen' },          // create later
-        { label: 'Create QR', route: '/(tabs)/explore' }, // create later
-        { label: 'Settings', route: '/settings' },   // create later
-        { label: 'Share our app', route: 'share' },  // special action
-      ].map((item) => (
-        <Pressable
-          key={item.label}
-          style={styles.drawerItem}
-          onPress={() => {
-            setMenuOpen(false);
+        { label: 'Scan', route: '/(tabs)', icon: ScanLine },
+        { label: 'Scan Images', route: null, icon: Image },
+        { label: 'Favorites', route: '/favorites', icon: Heart },
+        { label: 'History', route: '/history', icon: History },
+        { label: 'My QR', route: '/MyQRScreen', icon: QrCode },
+        { label: 'Create QR', route: '/(tabs)/GenerateQr', icon: PlusSquare },
+        { label: 'Settings', route: '/settings', icon: Settings },
+        { label: 'Share our app', route: 'share', icon: Share2 },
+      ].map((item) => {
+        const Icon = item.icon;
 
-            if (item.route === 'share') {
-              // 🔗 share app
-              Share.share({
-                message: 'Check out this QR Scanner app!',
-              });
-              return;
-            }
+        return (
+          <Pressable
+            key={item.label}
+            style={styles.drawerItem}
+            onPress={() => {
+              setMenuOpen(false);
 
-            if (!item.route) {
-              // placeholder / future feature
-              Alert.alert(item.label, 'Coming soon');
-              return;
-            }
+              if (item.route === 'share') {
+                Share.share({
+                  message: 'Check out this QR Scanner app!',
+                });
+                return;
+              }
 
-            router.push(item.route as any);
-          }}
-        >
-          <Text style={styles.drawerText}>{item.label}</Text>
-        </Pressable>
-      ))}
+              if (!item.route) {
+                Alert.alert(item.label, 'Coming soon');
+                return;
+              }
+
+              router.push(item.route as any);
+            }}
+          >
+            <Icon size={22} color="#fff" style={{ marginRight: 12 }} />
+            <Text style={styles.drawerText}>{item.label}</Text>
+          </Pressable>
+        );
+      })}
     </View>
   </>
 )}
+
 
     </View>
   );
@@ -263,11 +279,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
 
-  drawerItem: {
-    paddingVertical: 14,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#333',
-  },
+drawerItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingVertical: 14,
+  paddingHorizontal: 16,
+},
 
   drawerText: {
     color: '#fff',

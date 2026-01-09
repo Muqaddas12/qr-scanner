@@ -16,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import QRCode from 'react-native-qrcode-svg';
 
-export default function CreateCodeScreen() {
+export default function GenerateQr() {
   const router = useRouter();
 
   const [value, setValue] = useState('');
