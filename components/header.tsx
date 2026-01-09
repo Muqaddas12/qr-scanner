@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Pressable,
   View,
@@ -6,9 +6,10 @@ import {
   Share,
   Alert,
   StyleSheet,
+  Image,
 } from "react-native";
 import { useRouter, usePathname } from "expo-router";
-
+import { Dimensions } from "react-native";
 import {
   ScanLine,
   Heart,
@@ -17,8 +18,18 @@ import {
   PlusSquare,
   Settings,
   Share2,
-  Image,
+  Image as ImageIcon,
 } from "lucide-react-native";
+
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from "react-native-reanimated";
+
+import { PanGestureHandler } from "react-native-gesture-handler";
+
+const { width, height } = Dimensions.get("screen");
 
 type HeaderProps = {
   setMenuOpen: (value: boolean) => void;
@@ -26,11 +37,26 @@ type HeaderProps = {
 
 export default function Header({ setMenuOpen }: HeaderProps) {
   const router = useRouter();
-  const pathname = usePathname(); // 👈 get current route
+  const pathname = usePathname();
+
+  const translateX = useSharedValue(-width);
+
+  useEffect(() => {
+    translateX.value = withTiming(0, { duration: 250 });
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const closeDrawer = () => {
+    translateX.value = withTiming(-width, { duration: 200 });
+    setTimeout(() => setMenuOpen(false), 200);
+  };
 
   const menuItems = [
     { label: "Scan", route: "/(tabs)", icon: ScanLine },
-    { label: "Scan Images", route: null, icon: Image },
+    { label: "Scan Images", route: null, icon: ImageIcon },
     { label: "Favorites", route: "/favorites", icon: Heart },
     { label: "History", route: "/history", icon: History },
     { label: "My QR", route: "/MyQRScreen", icon: QrCode },
@@ -41,67 +67,101 @@ export default function Header({ setMenuOpen }: HeaderProps) {
 
   return (
     <>
-      <Pressable style={styles.overlay} onPress={() => setMenuOpen(false)} />
+      {/* OVERLAY */}
+      <Pressable style={styles.overlay} onPress={closeDrawer} />
 
-      <View style={styles.drawer}>
-        {menuItems.map((item) => {
-          const Icon = item.icon;
+      {/* DRAWER */}
+      <PanGestureHandler
+        onGestureEvent={(e) => {
+          if (e.nativeEvent.translationX < -80) {
+            closeDrawer();
+          }
+        }}
+      >
+        <Animated.View style={[styles.drawer, animatedStyle]}>
 
-          const isActive =
-            item.route && pathname.startsWith(item.route);
+          {/* APP LOGO */}
+          <View style={styles.drawerHeader}>
+            <Image
+              source={require("@/assets/images/logo.png")} 
+              style={styles.logo}
+            />
+            <Text style={styles.drawerTitle}>
+              QR & Barcode Scanner
+            </Text>
+          </View>
 
-          return (
-            <Pressable
-              key={item.label}
-              style={[
-                styles.drawerItem,
-                isActive && styles.activeItem,
-              ]}
-              onPress={() => {
-                setMenuOpen(false);
+          {/* MENU ITEMS */}
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive =
+  (item.label === "Scan" &&
+    (pathname === "/" || pathname === "/(tabs)" || pathname.includes("index"))) ||
+  (item.label === "Create QR" &&
+    pathname.includes("GenerateQr")) ||
+  (item.route &&
+    !item.route.includes("(tabs)") &&
+    pathname.startsWith(item.route));
 
-                if (item.route === "share") {
-                  Share.share({
-                    message: "Check out this QR Scanner app!",
-                  });
-                  return;
-                }
 
-                if (!item.route) {
-                  Alert.alert(item.label, "Coming soon");
-                  return;
-                }
-
-                router.push(item.route as any);
-              }}
-            >
-              <Icon
-                size={22}
-                color={isActive ? "#00ffcc" : "#fff"}
-                style={{ marginRight: 12 }}
-              />
-              <Text
+            return (
+              <Pressable
+                key={item.label}
                 style={[
-                  styles.drawerText,
-                  isActive && styles.activeText,
+                  styles.drawerItem,
+                  isActive && styles.activeItem,
                 ]}
+                onPress={() => {
+                  closeDrawer();
+
+                  if (item.route === "share") {
+                    Share.share({
+                      message: "Check out this QR Scanner app!",
+                    });
+                    return;
+                  }
+
+                  if (!item.route) {
+                    Alert.alert(item.label, "Coming soon");
+                    return;
+                  }
+
+                  router.push(item.route as any);
+                }}
               >
-                {item.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+                <Icon
+                  size={22}
+                  color={isActive ? "#00ffcc" : "#fff"}
+                  style={{ marginRight: 12 }}
+                />
+                <Text
+                  style={[
+                    styles.drawerText,
+                    isActive && styles.activeText,
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+
+          {/* VERSION INFO */}
+          <View style={styles.versionBox}>
+            <Text style={styles.versionText}>Version 1.0.0</Text>
+          </View>
+
+        </Animated.View>
+      </PanGestureHandler>
     </>
   );
 }
-
 const styles = StyleSheet.create({
   overlay: {
     position: "absolute",
     inset: 0,
     backgroundColor: "rgba(0,0,0,0.4)",
-    zIndex:50,
+    zIndex: 50,
   },
 
   drawer: {
@@ -109,11 +169,30 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     width: "75%",
-    height: "100%",
+    height: height,
     backgroundColor: "#111",
-    paddingTop: 80,
-    paddingHorizontal: 20,
-    zIndex:100,
+    paddingTop: 50,
+    zIndex: 100,
+  },
+
+  drawerHeader: {
+    alignItems: "center",
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#222",
+  },
+
+  logo: {
+    width: 70,
+    height: 70,
+    borderRadius: 16,
+    marginBottom: 10,
+  },
+
+  drawerTitle: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "700",
   },
 
   drawerItem: {
@@ -122,7 +201,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 8,
-    zIndex:100,
   },
 
   activeItem: {
@@ -137,5 +215,17 @@ const styles = StyleSheet.create({
   activeText: {
     color: "#00ffcc",
     fontWeight: "600",
+  },
+
+  versionBox: {
+    position: "absolute",
+    bottom: 20,
+    width: "100%",
+    alignItems: "center",
+  },
+
+  versionText: {
+    color: "#6B7280",
+    fontSize: 13,
   },
 });

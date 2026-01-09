@@ -10,10 +10,7 @@ export default function SettingsScreen() {
 const [menuOpen,setMenuOpen]=useState(false)
   return (
    <SafeAreaView style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
-  <View style={{ flex: 1 }}>
-
-    {/* HEADER BAR */}
-    <View
+     <View
       style={{
         height: 60,
         paddingHorizontal: 16,
@@ -40,6 +37,10 @@ const [menuOpen,setMenuOpen]=useState(false)
 
     {/* SIDEBAR / DRAWER */}
     {menuOpen && <Header setMenuOpen={setMenuOpen} />}
+  <View style={{ flex: 1 }}>
+
+    {/* HEADER BAR */}
+   
 
     {/* OPTIONS */}
     <View style={{ padding: 16 }}>

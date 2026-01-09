@@ -6,21 +6,14 @@ import {
   Pressable,
   Alert,
   Vibration,
-  Share,
+ 
 } from 'react-native';
-import {
-  ScanLine,
-  Image,
-  Heart,
-  History,
-  QrCode,
-  PlusSquare,
-  Settings,
-  Share2,
-} from 'lucide-react-native';
+
+import { Image, Zap, ZapOff ,Clock ,SwitchCameraIcon} from "lucide-react-native";
+
 
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
+import { Ionicons,} from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
@@ -123,41 +116,130 @@ export default function HomeScreen() {
       />
 
       {/* SCANNER FRAME */}
-      <View style={styles.frame}>
-        <View style={styles.frameLabel}>
-          <Text style={styles.frameText}>AUTO SCAN</Text>
-        </View>
-      </View>
+     <View  style={{justifyContent:'center',alignItems:'center',height:'100%'}}>
+       <View
+  style={{
+    width: 260,
+    height: 260,
+    alignSelf: "center",
+    position: "relative",
+    
+  }}
+>
+  {/* TOP LEFT */}
+  <View
+    style={{
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: 30,
+      height: 30,
+      borderLeftWidth: 4,
+      borderTopWidth: 4,
+      borderColor: "#22C55E",
+      borderTopLeftRadius: 6,
+    }}
+  />
+
+  {/* TOP RIGHT */}
+  <View
+    style={{
+      position: "absolute",
+      top: 0,
+      right: 0,
+      width: 30,
+      height: 30,
+      borderRightWidth: 4,
+      borderTopWidth: 4,
+      borderColor: "#22C55E",
+      borderTopRightRadius: 6,
+    }}
+  />
+
+  {/* BOTTOM LEFT */}
+  <View
+    style={{
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      width: 30,
+      height: 30,
+      borderLeftWidth: 4,
+      borderBottomWidth: 4,
+      borderColor: "#22C55E",
+      borderBottomLeftRadius: 6,
+    }}
+  />
+
+  {/* BOTTOM RIGHT */}
+  <View
+    style={{
+      position: "absolute",
+      bottom: 0,
+      right: 0,
+      width: 30,
+      height: 30,
+      borderRightWidth: 4,
+      borderBottomWidth: 4,
+      borderColor: "#22C55E",
+      borderBottomRightRadius: 6,
+    }}
+  />
+
+  {/* LABEL */}
+  <View
+    style={{
+      position: "absolute",
+      top: -12,
+      alignSelf: "center",
+      backgroundColor: "#0B0B0B",
+      paddingHorizontal: 10,
+    }}
+  >
+    <Text
+      style={{
+        color: "#22C55E",
+        fontSize: 12,
+        fontWeight: "600",
+        letterSpacing: 1,
+      }}
+    >
+      AUTO SCAN
+    </Text>
+  </View>
+</View>
+
+     </View>
 
       {/* HEADER */}
       <View style={styles.header}>
         <Pressable onPress={() => setMenuOpen(true)}>
           <Ionicons name="menu" size={28} color="#fff" />
         </Pressable>
+<View style={styles.centerIcons}>
+  <Pressable onPress={scanFromGallery}>
+    <Image size={26} color="#fff" />
+  </Pressable>
 
-        <View style={styles.centerIcons}>
-          <Pressable onPress={scanFromGallery}>
-            <Ionicons name="images-outline" size={26} color="#fff" />
-          </Pressable>
+  <Pressable onPress={() => setFlash(flash === "on" ? "off" : "on")}>
+    {flash === "on" ? (
+      <Zap size={26} color="#fff" />
+    ) : (
+      <ZapOff size={26} color="#fff" />
+    )}
+  </Pressable>
 
-          <Pressable onPress={() => setFlash(flash === 'on' ? 'off' : 'on')}>
-            <Ionicons
-              name={flash === 'on' ? 'flash' : 'flash-off'}
-              size={26}
-              color="#fff"
-            />
-          </Pressable>
+  <Pressable
+  onPress={() => setFacing(facing === "back" ? "front" : "back")}
+>
+  <SwitchCameraIcon size={26} color="#fff" />
+</Pressable>
 
-          <Pressable
-            onPress={() => setFacing(facing === 'back' ? 'front' : 'back')}
-          >
-            <MaterialIcons name="flip-camera-ios" size={26} color="#fff" />
-          </Pressable>
-        </View>
+</View>
+<Pressable>
+  <Clock size={26} color="#fff" />
+</Pressable>
 
-        <Pressable>
-          <Feather name="clock" size={26} color="#fff" />
-        </Pressable>
       </View>
 
       {/* SIDEBAR */}
